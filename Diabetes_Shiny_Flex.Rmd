@@ -1,0 +1,160 @@
+---
+title: "ELECTRONIC HEALTH RECORDS' POPULATION-BASED COHORT"
+output: 
+  flexdashboard::flex_dashboard:
+    social: menu
+    source_code: embed
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+
+
+```{r setup, include=FALSE}
+
+library(flexdashboard)
+library(shiny)
+library(readxl)
+library(tidyverse)
+library(ggpubr)
+library(DT)
+library(summarytools) 
+library(plotly)
+
+Diab <- read_excel("DiabeticData.xlsx")
+
+EHR_Diab_Select<-Diab%>%
+group_by(Recent_A1c)%>%
+mutate(Diabetes_Incidence = outcome)%>%
+mutate(MRN = as.integer(MRN))%>%
+mutate(Recent_A1c = round(as.numeric(Recent_A1c)))%>%
+mutate(smoking = case_when(smoking == 1 ~ "Yes", smoking == 0 ~ "No"))%>%
+mutate(alcohol = case_when(alcohol == 1 ~ "Yes", alcohol == 0 ~ "No"))%>%
+mutate(family_history = case_when(family_history == 1 ~ "Yes", family_history == 0 ~ "No"))%>%
+mutate(hypertension = case_when(hypertension == 1 ~ "Yes", hypertension == 0 ~ "No"))%>%
+  mutate(pregnancies = case_when(pregnancies == 1 ~ "Yes", pregnancies == 0 ~ "No"))%>%
+  mutate(marital_status = case_when(marital_status == 1 ~ "Yes", marital_status == 0 ~ "No"))%>%
+  mutate(exercise = case_when(exercise == 1 ~ "Yes", exercise == 0 ~ "No"))%>%
+  select(Diabetes_Incidence, Diet, BMI, age, gender, Recent_A1c, MRN, smoking, alcohol, family_history, hypertension, pregnancies, marital_status,exercise, nationality)
+
+```
+# Visualisation One
+Column {.sidebar}
+------------------
+TO REVIEW PATIENT MEDICAL RECORD NUMBER, SELECT MRN FROM DROP DOWN LIST IN "GROUP BY".
+```{r}
+
+
+selectInput('x', 'Plot on x axis', names(EHR_Diab_Select))
+selectInput('y', 'Plot on y axis', names(EHR_Diab_Select),
+                      names(EHR_Diab_Select)[[2]])
+selectInput('color', 'Group By',names(EHR_Diab_Select))
+
+
+
+
+
+
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Overview
+
+```{r}
+
+renderPlotly({
+  p <- ggplot(EHR_Diab_Select, aes_string(x=input$x, y=input$y,colour = input$color)) 
+  
+    p <- p + geom_jitter()+ theme(axis.text.x = element_text(angle = 90))
+  
+  print(p)})
+
+```
+
+# Visualisation Two
+
+Column {.sidebar}
+-------------------
+TO REVIEW PATIENT MEDICAL RECORD NUMBER, SELECT MRN FROM DROP DOWN LIST IN "GROUP BY".
+```{r}
+
+
+tags$h5("Plot on Chart A")
+tags$hr()
+
+selectInput('z', 'Plot on  [X axis] Area A', names(EHR_Diab_Select), width = 180)
+selectInput('z1', 'Plot on  [Y axis] Area A', names(EHR_Diab_Select)   ,names(EHR_Diab_Select)[[2]],width = 150)
+selectInput('z2', 'Plot on  [Group By] Area A', names(EHR_Diab_Select), width =120, selected = "gender")
+
+tags$h5("Plot on Chart B")
+tags$hr()
+selectInput('w', 'Plot on  [X axis] Area B', names(EHR_Diab_Select),width = 180)
+selectInput('w1', 'Plot on  [Y axis] Area B', names(EHR_Diab_Select)   ,names(EHR_Diab_Select)[[2]],width = 150)
+selectInput('w2', 'Plot on  [Group By] Area B',names(EHR_Diab_Select),width = 120, selected = "Recent_A1C")
+
+
+tags$h5("Plot on Chart C")
+tags$hr()
+selectInput('n', 'Plot on  [X axis] Area C', names(EHR_Diab_Select),width = 180)
+selectInput('n1', 'Plot on  [Y axis] Area C', names(EHR_Diab_Select)   ,names(EHR_Diab_Select)[[2]],width = 150)
+selectInput('n2', 'Plot on  [Group By] Area C',names(EHR_Diab_Select),width = 120, selected = "exercise")
+
+
+tags$h5("Plot on Chart D")
+tags$hr()
+selectInput('m', 'Plot on  [X axis] Area D', names(EHR_Diab_Select),width = 180)
+selectInput('m1', 'Plot on  [Y axis] Area D', names(EHR_Diab_Select)   ,names(EHR_Diab_Select)[[2]],width = 150)
+selectInput('m2', 'Plot on [Group By] Area D ',names(EHR_Diab_Select),width = 120, selected = "age")
+
+
+```
+
+
+## {data-width=250}
+-----------------------------------------------------------------------
+
+### Area A
+```{r}
+renderPlotly({
+  
+  a <- ggplot(EHR_Diab_Select, aes_string(input$z, input$z1, colour = input$z2)) 
+  
+    a <- a + geom_jitter()+ theme(axis.text.x = element_text(angle = 90)) 
+  
+  print(a)})
+```
+
+### Area B
+
+```{r}
+renderPlotly({
+  b <- ggplot(EHR_Diab_Select, aes_string(input$w, input$w1, colour = input$w2)) 
+  
+    b <- b + geom_jitter()+ theme(axis.text.x = element_text(angle = 90)) 
+  print(b)})
+```
+
+## {data-width=250}
+### Area C
+
+```{r}
+renderPlotly({
+  c <- ggplot(EHR_Diab_Select, aes_string(input$n, input$n1, colour = input$n2)) 
+  
+    c <- c + geom_jitter()+ theme(axis.text.x = element_text(angle = 90))  
+  print(c)})
+
+```
+
+### Area D
+
+```{r}
+renderPlotly({
+  d <- ggplot(EHR_Diab_Select, aes_string(input$m, input$m1, colour = input$m2)) 
+  
+    d <- d + geom_jitter()+ theme(axis.text.x = element_text(angle = 90)) 
+  print(d)})
+```
